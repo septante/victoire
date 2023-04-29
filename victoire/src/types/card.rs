@@ -18,7 +18,7 @@ pub trait Card: Clone + Send + Sync {
     fn name(&self) -> &str;
     /// The card's types
     fn types(&self) -> Vec<CardType>;
-    /// A description of the card
+    /// A description of the card's effects
     fn description(&self) -> &str {
         ""
     }
