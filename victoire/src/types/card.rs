@@ -10,6 +10,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::Player;
 
+use super::Game;
+
 #[clonable]
 #[allow(unused_variables)]
 #[typetag::serde(tag = "card")]
@@ -34,7 +36,7 @@ pub trait Card: Clone + Send + Sync {
     }
 
     /// Effects when this card is played
-    fn effects_on_play(&self) {}
+    fn effects_on_play(&self, game: &mut Game, player_index: usize) {}
 
     /// Print out the card's types
     fn print_types(&self) -> String {
@@ -127,8 +129,20 @@ pub struct Cost {
     pub coins: usize,
 }
 
+impl Cost {
+    pub fn new(coins: usize) -> Cost {
+        Cost { coins }
+    }
+}
+
 #[non_exhaustive]
 #[derive(Copy, Clone, Default, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Value {
     pub coins: usize,
+}
+
+impl Value {
+    pub fn new(coins: usize) -> Value {
+        Value { coins }
+    }
 }

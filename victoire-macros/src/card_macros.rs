@@ -64,7 +64,7 @@ macro_rules! placeholder_effects {
                 Vec::new()
             }
             fn cost(&self) -> Cost {
-                Cost { coins: $cost }
+                Cost::new($cost)
             }
             fn description(&self) -> &str {
                 "PLACEHOLDER CARD"
@@ -103,8 +103,8 @@ macro_rules! name {
 /// // http://wiki.dominionstrategy.com/index.php/Village
 /// declare_card!(Village);
 /// #[typetag::serde]
-/// impl Card for Golem {
-///     name!("Golem");
+/// impl Card for Village {
+///     name!("Village");
 ///     card_cost!(3);
 ///     types!(vec![Action]);
 ///     // ...
@@ -114,7 +114,7 @@ macro_rules! name {
 macro_rules! card_cost {
     ($coins:expr) => {
         fn cost(&self) -> Cost {
-            Cost { coins: $coins }
+            Cost::new($coins)
         }
     };
 }
@@ -160,9 +160,9 @@ macro_rules! types {
 /// ```
 #[macro_export]
 macro_rules! treasure_value {
-    ($value:expr) => {
+    ($coins:expr) => {
         fn treasure_value(&self) -> Value {
-            Value { coins: $value }
+            Value::new($coins)
         }
     };
 }
