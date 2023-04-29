@@ -1,20 +1,60 @@
 use std::{
     cmp::Ordering,
-    fmt::{self, Formatter},
+    fmt::{self, Display, Formatter},
     hash::{Hash, Hasher},
 };
 
 use dyn_clonable::clonable;
+use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 
 #[clonable]
 #[typetag::serde(tag = "card")]
 pub trait Card: Clone + Send + Sync {
+    /// Name of the card
     fn name(&self) -> &str;
+    /// The card's types
     fn types(&self) -> Vec<CardType>;
+    /// A description of the card
     fn description(&self) -> &str {
         ""
     }
+    /// What does this card cost?
     fn cost(&self) -> Cost;
+    /// If this card is a treasure card, what is it worth?
+    fn treasure_value(&self) -> Value {
+        Value::default()
+    }
+    /// Effects when this card is played
+    fn effects_on_play(&self);
+
+    fn print_types(&self) {
+        println!("{}", self.types().iter().format(", "))
+    }
+    /// Check if this card is an Action
+    fn is_action(&self) -> bool {
+        self.types().contains(&CardType::Action)
+    }
+    /// Check if this card is an Attack
+    fn is_attack(&self) -> bool {
+        self.types().contains(&CardType::Attack)
+    }
+    /// Check if this card is a Reaction
+    fn is_reaction(&self) -> bool {
+        self.types().contains(&CardType::Reaction)
+    }
+    /// Check if this card is a Treasure
+    fn is_treasure(&self) -> bool {
+        self.types().contains(&CardType::Treasure)
+    }
+    /// Check if this card is a Victory card
+    fn is_victory(&self) -> bool {
+        self.types().contains(&CardType::Victory)
+    }
+    /// Check if this card is a Curse card
+    fn is_curse(&self) -> bool {
+        self.types().contains(&CardType::Curse)
+    }
 }
 
 impl fmt::Display for dyn Card {
@@ -56,7 +96,7 @@ impl PartialOrd for dyn Card {
 }
 
 #[non_exhaustive]
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum CardType {
     Treasure,
     Victory,
@@ -66,8 +106,20 @@ pub enum CardType {
     Reaction,
 }
 
+impl Display for CardType {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{:?}", *self)
+    }
+}
+
 #[non_exhaustive]
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Cost {
+    pub coins: usize,
+}
+
+#[non_exhaustive]
+#[derive(Copy, Clone, Default, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub struct Value {
     pub coins: usize,
 }
