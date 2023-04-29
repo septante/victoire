@@ -1,3 +1,6 @@
+use dyn_clonable::clonable;
+
+#[clonable]
 pub trait Card: Clone + Send + Sync {
     fn name(&self) -> &str;
     fn types(&self) -> Vec<CardType>;
