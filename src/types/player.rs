@@ -1,6 +1,7 @@
 use crate::types::CardList;
 
 #[non_exhaustive]
+#[derive(Clone, Default, Debug)]
 pub struct Player {
     pub hand: CardList,
     pub deck: CardList,
