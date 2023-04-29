@@ -8,7 +8,10 @@ use dyn_clonable::clonable;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
+use crate::types::Player;
+
 #[clonable]
+#[allow(unused_variables)]
 #[typetag::serde(tag = "card")]
 pub trait Card: Clone + Send + Sync {
     /// Name of the card
@@ -25,11 +28,17 @@ pub trait Card: Clone + Send + Sync {
     fn treasure_value(&self) -> Value {
         Value::default()
     }
-    /// Effects when this card is played
-    fn effects_on_play(&self);
+    /// The number of points the card is worth (if it is a victory/curse card)
+    fn victory_points(&self, player: &Player) -> isize {
+        0
+    }
 
-    fn print_types(&self) {
-        println!("{}", self.types().iter().format(", "))
+    /// Effects when this card is played
+    fn effects_on_play(&self) {}
+
+    /// Print out the card's types
+    fn print_types(&self) -> String {
+        format!("{}", self.types().iter().format(", "))
     }
     /// Check if this card is an Action
     fn is_action(&self) -> bool {
