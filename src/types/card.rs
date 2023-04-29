@@ -7,6 +7,8 @@ pub trait Card: Clone + Send + Sync {
     fn cost(&self) -> Cost;
 }
 
+#[non_exhaustive]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum CardType {
     Treasure,
     Victory,
@@ -16,6 +18,8 @@ pub enum CardType {
     Reaction,
 }
 
+#[non_exhaustive]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Cost {
     pub coins: usize,
 }
