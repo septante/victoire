@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use crate::types::CardList;
+use crate::types::{CardDeck, CardList};
 
 #[non_exhaustive]
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Player {
     pub hand: CardList,
-    pub deck: CardList,
+    pub deck: CardDeck,
     pub resources: Resources,
 }
 
