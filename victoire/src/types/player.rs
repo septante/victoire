@@ -117,6 +117,17 @@ pub enum Phase {
     CleanupPhase,
 }
 
+impl Phase {
+    pub fn next(&self) -> Self {
+        match self {
+            Self::OutOfTurn => Self::ActionPhase,
+            Self::ActionPhase => Self::BuyPhase,
+            Self::BuyPhase => Self::CleanupPhase,
+            Self::CleanupPhase => Self::OutOfTurn,
+        }
+    }
+}
+
 /// Struct to keep track of certain conditions
 #[non_exhaustive]
 #[derive(Copy, Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
