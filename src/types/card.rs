@@ -7,6 +7,7 @@ use std::{
 use dyn_clonable::clonable;
 
 #[clonable]
+#[typetag::serde(tag = "card")]
 pub trait Card: Clone + Send + Sync {
     fn name(&self) -> &str;
     fn types(&self) -> Vec<CardType>;
