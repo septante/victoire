@@ -8,9 +8,10 @@ use dyn_clonable::clonable;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::types::Player;
-
-use super::Game;
+use crate::{
+    callbacks::Callbacks,
+    types::{Game, Player},
+};
 
 #[clonable]
 #[allow(unused_variables)]
@@ -36,7 +37,21 @@ pub trait Card: Clone + Send + Sync {
     }
 
     /// Effects when this card is played
-    fn effects_on_play(&self, game: &mut Game, player_index: usize) {}
+    fn effects_on_play(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {}
+    /// Effects when this card is gained
+    fn effects_on_gain(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {}
+
+    fn attack_target(&self) -> Option<AttackTarget> {
+        None
+    }
+
+    fn attack_effects(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {}
+
+    fn reaction_effects(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {}
+
+    fn reaction_trigger(&self) -> Option<ReactionTrigger> {
+        None
+    }
 
     /// Print out the card's types
     fn print_types(&self) -> String {
@@ -145,4 +160,20 @@ impl Value {
     pub fn new(coins: usize) -> Value {
         Value { coins }
     }
+}
+
+/// Which players an attack can target
+#[non_exhaustive]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub enum AttackTarget {
+    PlayerToLeft,
+    EveryoneElse,
+    PlayerOfChoice,
+}
+
+/// Which players an attack can target
+#[non_exhaustive]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub enum ReactionTrigger {
+    OtherPlayerPlaysAttack,
 }

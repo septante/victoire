@@ -9,6 +9,7 @@ use crate::types::{CardDeck, CardList};
 use crate::utils;
 use victoire_macros::card_vec;
 
+/// Struct representing a player
 #[non_exhaustive]
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Player {
@@ -63,6 +64,10 @@ impl Player {
         }
     }
 
+    pub fn hand_size(&self) -> usize {
+        self.hand.len()
+    }
+
     /// Draws x cards for the player
     pub fn draw_cards(&mut self, cards: usize) {
         for _ in 0..cards {
@@ -94,6 +99,48 @@ impl Player {
     /// Gives the player extra coins for this turn
     pub fn add_coins(&mut self, coins: usize) {
         self.resources.temp_coins += coins;
+    }
+
+    /// Discards cards from hand given an array of indexes of said cards
+    ///
+    /// Will panic if indexes are invalid
+    pub fn discard_given_indexes(&mut self, mut indexes: Vec<usize>) {
+        indexes.sort_unstable();
+        indexes.reverse();
+        for i in indexes {
+            //if hand is empty, return from function
+            if self.hand.is_empty() {
+                return;
+            }
+            self.discard.push_back(self.hand.remove(i).unwrap());
+        }
+    }
+
+    /// Moves cards given indexes to hand
+    ///
+    /// Will panic if indexes are invalid
+    pub fn move_given_indexes_discard_to_hand(&mut self, indexes: Vec<usize>) {
+        for i in indexes {
+            if self.discard.is_empty() {
+                return;
+            }
+            self.hand.push_back(self.discard.remove(i).unwrap())
+        }
+    }
+
+    /// Trashes cards from hand given an array of indexes of said cards
+    ///
+    /// Will panic if indexes are invalid
+    pub fn trash_given_indexes(&mut self, mut indexes: Vec<usize>, trash: &mut CardDeck) {
+        indexes.sort_unstable();
+        indexes.reverse();
+        for i in indexes {
+            //if hand is empty, return from function
+            if self.hand.is_empty() {
+                return;
+            }
+            trash.push_back(self.hand.remove(i).unwrap());
+        }
     }
 }
 
