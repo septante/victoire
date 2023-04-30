@@ -4,8 +4,6 @@
 
 #![allow(clippy::wildcard_imports)]
 
-use crate::callbacks::ChoiceCountOptions;
-
 use super::base::*;
 use super::prelude::*;
 
@@ -233,16 +231,18 @@ impl Card for Library {
 
     fn effects_on_play(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {
         let player = &mut game.players[player_index];
+        let mut extras = CardDeck::new();
         while player.hand.len() < 7 {
             if player.deck.front().unwrap().is_action() {
-                //TODO: get player consent to draw or discard the card
-                if callbacks.get_player_consent(player.player_number, "discard?") {
-                    player.discard.push_back(player.deck.pop_front().unwrap());
+                if callbacks.yes_or_no(player.player_number, "Skip?") {
+                    extras.push_back(player.deck.pop_front().unwrap());
+                    continue;
                 }
             } else {
                 player.draw_cards(1);
             }
         }
+        player.discard.append(&mut extras);
     }
 }
 
@@ -307,7 +307,7 @@ impl Card for Moat {
     fn reaction_effects(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {
         // TODO: Fix this to make it a choice per attack, rather than making
         // the player completely immune until their next turn
-        if callbacks.get_player_consent(player_index, "Use moat?") {
+        if callbacks.yes_or_no(player_index, "Use moat?") {
             let p = game.players.get_mut(player_index).unwrap();
             p.state.immune = true;
         }

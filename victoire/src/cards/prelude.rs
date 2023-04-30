@@ -2,6 +2,7 @@ pub use victoire_macros::*;
 
 pub use serde::{Deserialize, Serialize};
 
+pub use crate::callbacks::{Callbacks, ChoiceCountOptions};
 pub use crate::types::card::{
     AttackTarget::{self, *},
     CardType::{self, *},
@@ -9,5 +10,4 @@ pub use crate::types::card::{
     ReactionTrigger::{self, *},
     Value,
 };
-pub use crate::types::{Card, Game, Player};
-pub use crate::Callbacks;
+pub use crate::types::{Card, CardDeck, CardList, Game, Player};

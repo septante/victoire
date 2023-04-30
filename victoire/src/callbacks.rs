@@ -30,7 +30,7 @@ pub trait Callbacks: Clone + Send + Sync {
         message: &str,
     ) -> Vec<usize>;
     /// Prompt the given player with a yes/no question
-    fn get_player_consent(&self, player_index: usize, prompt: &str) -> bool;
+    fn yes_or_no(&self, player_index: usize, prompt: &str) -> bool;
     /// Prompt player for one or more player indices
     fn choose_players(
         &self,
@@ -161,7 +161,7 @@ impl Callbacks for TestClient {
         todo!()
     }
 
-    fn get_player_consent(&self, player_index: usize, prompt: &str) -> bool {
+    fn yes_or_no(&self, player_index: usize, prompt: &str) -> bool {
         let mut input = String::new();
         println!("(y)es/(n)o");
         io::stdin()
