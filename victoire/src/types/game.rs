@@ -44,7 +44,7 @@ impl Game {
     }
 
     /// Generates the supply piles for a game given a list of cards to use
-    pub fn create_supply(&mut self, cards: CardList) -> Result<()> {
+    pub fn create_supply(&mut self, cards: CardList) -> Result {
         let player_count = self.player_count();
 
         let (victory_card_count, province_count, curse_count) = match player_count {
@@ -127,7 +127,7 @@ impl Game {
         player_index: usize,
         card: Box<dyn Card>,
         callbacks: &dyn Callbacks,
-    ) -> Result<()> {
+    ) -> Result {
         if self.supply.get(card.name()).unwrap().count == 0 {
             return Err(Error::EmptyPile { card });
         }
@@ -146,7 +146,7 @@ impl Game {
         player_index: usize,
         card: Box<dyn Card>,
         callbacks: &dyn Callbacks,
-    ) -> Result<()> {
+    ) -> Result {
         if self.supply.get(card.name()).unwrap().count == 0 {
             return Err(Error::EmptyPile { card });
         }
@@ -165,7 +165,7 @@ impl Game {
         player_index: usize,
         card: Box<dyn Card>,
         callbacks: &dyn Callbacks,
-    ) -> Result<()> {
+    ) -> Result {
         if self.supply.get(card.name()).unwrap().count == 0 {
             return Err(Error::EmptyPile { card });
         }
@@ -190,6 +190,34 @@ impl Game {
         }
 
         cards
+    }
+
+    /// Plays an action [card](Card) from the hand of the player corresponding
+    /// to the given index
+    ///
+    /// This is the function to call when a player plays a card directly
+    pub fn play_action_from_hand(
+        &mut self,
+        player_index: usize,
+        card_index: usize,
+        callbacks: &dyn Callbacks,
+    ) -> Result {
+        // Remove card from hand
+        let player = &mut self.players[player_index];
+        let card = player.hand.get(card_index).unwrap();
+        if card.is_action() {
+            let card = player.hand.remove(card_index).unwrap();
+            player.in_play.push_back(card.clone());
+
+            player.resources.actions -= 1;
+            self.action_effects(player_index, &*card, callbacks);
+
+            Ok(())
+        } else {
+            Err(Error::CardTypeMisMatch {
+                expected: CardType::Action,
+            })
+        }
     }
 
     /// Gives the player the effects of an action card as if they had played it
@@ -280,7 +308,7 @@ impl Game {
         player_index: usize,
         card_index: usize,
         callbacks: &dyn Callbacks,
-    ) -> Result<()> {
+    ) -> Result {
         let player = &mut self.players[player_index];
 
         // Remove card from hand
@@ -322,7 +350,7 @@ impl Game {
         player_index: usize,
         card: Box<dyn Card>,
         callbacks: &dyn Callbacks,
-    ) -> Result<()> {
+    ) -> Result {
         if player_index != self.current_turn {
             return Err(Error::OutOfTurn);
         }
@@ -357,6 +385,26 @@ impl Game {
         }
 
         Ok(())
+    }
+
+    /// Take a turn
+    pub fn turn(&mut self, player_index: usize, callbacks: &dyn Callbacks) {
+        let player = &mut self.players[player_index];
+
+        player.reset_state();
+
+        player.phase = Phase::ActionPhase;
+        self.action_phase(player_index, callbacks);
+
+        let player = &mut self.players[player_index];
+        player.phase = Phase::BuyPhase;
+        self.buy_phase(player_index, callbacks);
+
+        let player = &mut self.players[player_index];
+        player.phase = Phase::CleanupPhase;
+        player.cleanup();
+
+        player.phase = Phase::OutOfTurn;
     }
 
     /// Action phase

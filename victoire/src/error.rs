@@ -5,7 +5,7 @@ use crate::types::{Card, CardType};
 use serde::{Deserialize, Serialize};
 use thiserror::Error as ThisError;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T = ()> = std::result::Result<T, Error>;
 
 #[non_exhaustive]
 #[derive(Clone, Debug, ThisError, Serialize, Deserialize)]

@@ -101,6 +101,25 @@ impl Player {
         self.resources.temp_coins += coins;
     }
 
+    /// Reset player state
+    pub fn reset_state(&mut self) {
+        // Reset resources
+        self.resources.actions = 1;
+        self.resources.buys = 1;
+        self.resources.temp_coins = 0;
+
+        // Reset conditions
+        self.state = State::default();
+    }
+
+    /// Cleanup phase at end of turn - discard hand and draw five new cards
+    pub fn cleanup(&mut self) {
+        self.discard.append(&mut self.hand);
+        self.discard.append(&mut self.in_play);
+
+        self.draw_cards(5);
+    }
+
     /// Discards cards from hand given an array of indexes of said cards
     ///
     /// Will panic if indexes are invalid
@@ -182,6 +201,5 @@ impl Phase {
 pub struct State {
     /// Is the player immune to attacks
     pub immune: bool,
-    pub temp_immune: bool,
     pub merchant_bonus: usize,
 }
