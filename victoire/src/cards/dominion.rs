@@ -43,8 +43,26 @@ impl Card for Bandit {
     }
 
     fn attack_effects(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {
-        let player = &mut game.players[player_index];
-        todo!()
+        let mut cards = game.reveal(player_index, 2);
+        let trash_choices: Vec<usize> = (0..2)
+            .filter(|i| cards[*i].is_treasure() && cards[*i].name() != "Copper")
+            .collect();
+        match trash_choices.len() {
+            1 => {
+                cards.remove(trash_choices[0]);
+            }
+            2 => {
+                let index =
+                    callbacks.choose_cards_from_selection(1, &cards, "Choose a card to trash.")[0];
+                cards.remove(index);
+            }
+            _ => {}
+        }
+
+        let player = game.get_player_mut(player_index).unwrap();
+        for card in cards {
+            player.discard.push_back(card);
+        }
     }
 }
 
@@ -164,14 +182,12 @@ impl Card for Harbinger {
         player.add_actions(1);
         player.draw_cards(1);
 
-        //look through discard and pick
-        // callbacks.reveal_top_discard_pile(player, player.discard.len());
-
-        //TODO:
-        //create callback for prompt_indexes from discard
-        let indexes = vec![0, 1, 2];
-        //create method for moving from discard to hand
-        player.move_given_indexes_discard_to_hand(indexes)
+        if let Some(indexes) = callbacks.choose_cards_from_discard_opt(
+            1,
+            "Choose a card from your discard to put onto your deck.",
+        ) {
+            player.move_given_indexes_discard_to_hand(indexes);
+        }
     }
 }
 
@@ -330,19 +346,31 @@ impl Card for ThroneRoom {
     types!(vec![Action]);
 
     fn effects_on_play(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {
-        let card_index = callbacks
-            .choose_card_from_hand_opt("Choose card to play twice")
-            .unwrap();
+        let opt = callbacks.choose_cards_from_hand_opt(1, "Choose card to play twice");
 
-        let player = &mut game.players[player_index];
-        let card = player.hand.remove(card_index).unwrap();
-
-        if !card.is_action() {
-            // TODO: Prompt for new card
+        if opt.is_none() {
+            return;
         }
 
-        card.effects_on_play(game, player_index, callbacks);
-        card.effects_on_play(game, player_index, callbacks);
+        let card_index = opt.unwrap()[0];
+
+        let player = &mut game.players[player_index];
+        let mut card = player.hand.remove(card_index).unwrap();
+
+        while !card.is_action() {
+            let opt = callbacks.choose_cards_from_hand_opt(1, "Choose card to play twice");
+
+            if opt.is_none() {
+                return;
+            }
+
+            let card_index = opt.unwrap()[0];
+
+            card = player.hand.remove(card_index).unwrap();
+        }
+
+        game.action_effects(player_index, &*card, callbacks);
+        game.action_effects(player_index, &*card, callbacks);
 
         let player = &mut game.players[player_index];
         player.in_play.push_back(card);

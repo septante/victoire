@@ -6,7 +6,10 @@ use crate::{
     callbacks::Callbacks,
     cards::{base::*, dominion::*},
     error::{Error::*, Result},
-    types::{Card, CardDeck, CardList, Player, PlayerList, Supply},
+    types::{
+        card::{AttackTarget, ReactionTrigger},
+        Card, CardDeck, CardList, Player, PlayerList, Supply,
+    },
 };
 
 /// The data for a game of Dominion.
@@ -108,6 +111,16 @@ impl Game {
         self.players.push(player);
     }
 
+    /// Get reference to a player given index
+    pub fn get_player(&self, index: usize) -> Option<&Player> {
+        self.players.get(index)
+    }
+
+    /// Get mutable reference to a player given index
+    pub fn get_player_mut(&mut self, index: usize) -> Option<&mut Player> {
+        self.players.get_mut(index)
+    }
+
     /// Gain a copy of a card to the discard pile
     pub fn gain(
         &mut self,
@@ -144,5 +157,90 @@ impl Game {
         let player = &mut self.players[player_index];
         player.hand.push_back(card);
         Ok(())
+    }
+
+    pub fn reveal(&mut self, player_index: usize, count: usize) -> CardList {
+        let mut cards = CardList::new();
+        for _ in 0..count {
+            cards.push(self.players[player_index].deck.pop_front().unwrap())
+        }
+
+        cards
+    }
+
+    /// Gives the player the effects of an action card as if they had played it
+    ///
+    /// Does not subtract actions from the player's total. Should only be called
+    /// in the effects() function of other cards (e.g. Throne Room)
+    pub fn action_effects(
+        &mut self,
+        player_index: usize,
+        card: &dyn Card,
+        callbacks: &dyn Callbacks,
+    ) {
+        // Effects on the player who played the card
+        card.effects_on_play(self, player_index, callbacks);
+
+        // Attack effects, if any
+        if card.is_attack() {
+            let targets = self.get_targets(
+                player_index,
+                card.attack_target()
+                    .expect("Card has Attack type but does not define targets!"),
+                callbacks,
+            );
+
+            self.check_reactions(
+                player_index,
+                ReactionTrigger::OtherPlayerPlaysAttack,
+                callbacks,
+            );
+
+            for index in targets {
+                let player = &self.players[player_index];
+
+                if !(player.state.immune) {
+                    card.attack_effects(self, index, callbacks)
+                }
+
+                let mut player = &mut self.players[player_index];
+                player.state.immune = false;
+            }
+        }
+    }
+
+    /// Convert the attack target type into a vec of player indices
+    pub fn get_targets(
+        &mut self,
+        player_index: usize,
+        target_type: AttackTarget,
+        callbacks: &dyn Callbacks,
+    ) -> Vec<usize> {
+        match target_type {
+            AttackTarget::EveryoneElse => {
+                let mut indices = vec![];
+                for i in 0..self.player_count() {
+                    indices.push(i);
+                }
+                indices.remove(player_index);
+
+                indices
+            }
+
+            AttackTarget::PlayerToLeft => {
+                vec![player_index + 1]
+            }
+
+            _ => panic!(),
+        }
+    }
+
+    pub fn check_reactions(
+        &mut self,
+        player_index: usize,
+        reaction_trigger: ReactionTrigger,
+        callbacks: &dyn Callbacks,
+    ) {
+        // TODO: prompt player and perform reaction
     }
 }
