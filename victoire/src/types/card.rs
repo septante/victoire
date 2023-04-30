@@ -40,6 +40,8 @@ pub trait Card: Clone + Send + Sync {
     fn effects_on_play(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {}
     /// Effects when this card is gained
     fn effects_on_gain(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {}
+    /// Effects when this card is bought
+    fn effects_on_buy(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {}
 
     fn attack_target(&self) -> Option<AttackTarget> {
         None
@@ -176,4 +178,5 @@ pub enum AttackTarget {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum ReactionTrigger {
     OtherPlayerPlaysAttack,
+    BuyAVictoryCard,
 }

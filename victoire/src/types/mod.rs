@@ -5,7 +5,7 @@ pub mod player;
 pub use self::{
     card::{Card, CardType},
     game::Game,
-    player::Player,
+    player::{Player, Phase},
 };
 use std::collections::{HashMap, VecDeque};
 

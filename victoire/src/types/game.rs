@@ -5,10 +5,10 @@ use victoire_macros::card_vec;
 use crate::{
     callbacks::{Callbacks, ChoiceCountOptions},
     cards::{base::*, dominion::*},
-    error::{Error::*, Result},
+    error::{Error, Result},
     types::{
         card::{AttackTarget, ReactionTrigger},
-        Card, CardDeck, CardList, Player, PlayerList, Supply,
+        Card, CardDeck, CardList, CardType, Phase, Player, PlayerList, Supply,
     },
 };
 
@@ -53,7 +53,7 @@ impl Game {
             4 => (12, 12, 30),
             5 => (12, 15, 40),
             6 => (12, 18, 50),
-            _ => return Err(NotEnoughPlayers),
+            _ => return Err(Error::NotEnoughPlayers),
         };
 
         let mut supply: Supply = Supply::default();
@@ -129,7 +129,7 @@ impl Game {
         callbacks: &dyn Callbacks,
     ) -> Result<()> {
         if self.supply.get(card.name()).unwrap().count == 0 {
-            return Err(EmptyPile { card });
+            return Err(Error::EmptyPile { card });
         }
 
         self.supply.get_mut(card.name()).unwrap().count -= 1;
@@ -148,7 +148,7 @@ impl Game {
         callbacks: &dyn Callbacks,
     ) -> Result<()> {
         if self.supply.get(card.name()).unwrap().count == 0 {
-            return Err(EmptyPile { card });
+            return Err(Error::EmptyPile { card });
         }
 
         self.supply.get_mut(card.name()).unwrap().count -= 1;
@@ -156,6 +156,25 @@ impl Game {
 
         let player = &mut self.players[player_index];
         player.hand.push_back(card);
+        Ok(())
+    }
+
+    /// Gain a copy of a card to the top of the deck
+    pub fn gain_to_deck_top(
+        &mut self,
+        player_index: usize,
+        card: Box<dyn Card>,
+        callbacks: &dyn Callbacks,
+    ) -> Result<()> {
+        if self.supply.get(card.name()).unwrap().count == 0 {
+            return Err(Error::EmptyPile { card });
+        }
+
+        self.supply.get_mut(card.name()).unwrap().count -= 1;
+        card.effects_on_gain(self, player_index, callbacks);
+
+        let player = &mut self.players[player_index];
+        player.deck.push_front(card);
         Ok(())
     }
 
@@ -251,5 +270,151 @@ impl Game {
         callbacks: &dyn Callbacks,
     ) {
         // TODO: prompt player and perform reaction
+    }
+
+    /// Plays a single treasure card from the player's hand. Returns
+    /// `Err(CardTypeMisMatch { expected: Treasure })` if the card is not a
+    /// treasure card
+    pub fn play_treasure(
+        &mut self,
+        player_index: usize,
+        card_index: usize,
+        callbacks: &dyn Callbacks,
+    ) -> Result<()> {
+        let player = &mut self.players[player_index];
+
+        // Remove card from hand
+        let c = player.hand.get(card_index).unwrap();
+        if !c.is_treasure() {
+            return Err(Error::CardTypeMisMatch {
+                expected: CardType::Treasure,
+            });
+        }
+
+        let card = player.hand.remove(card_index).unwrap();
+        card.effects_on_play(self, player_index, callbacks);
+        let player = &mut self.players[player_index];
+
+        player.resources.coins += card.treasure_value().coins;
+
+        player.in_play.push_back(card.clone());
+
+        Ok(())
+    }
+
+    /// Play all treasure cards from the players hand
+    pub fn play_all_treasures(&mut self, player_index: usize, callbacks: &dyn Callbacks) {
+        let range = self.players[player_index].hand.len();
+
+        for i in 0..range {
+            let player = &mut self.players[player_index];
+            let card = player.hand.get(i).unwrap();
+            if card.is_treasure() {
+                // We know the card is a treasure card, so unwrap
+                self.play_treasure(player_index, i, callbacks).unwrap();
+            }
+        }
+    }
+
+    /// Buy a card
+    pub fn buy_card(
+        &mut self,
+        player_index: usize,
+        card: Box<dyn Card>,
+        callbacks: &dyn Callbacks,
+    ) -> Result<()> {
+        if player_index != self.current_turn {
+            return Err(Error::OutOfTurn);
+        }
+
+        let player = &mut self.players[player_index];
+
+        if player.phase != Phase::BuyPhase {
+            return Err(Error::WrongPhase);
+        }
+
+        if player.resources.coins_remaining < card.cost().coins {
+            return Err(Error::InsufficientFunds);
+        }
+
+        if self.supply.get(card.name()).unwrap().count == 0 {
+            return Err(Error::EmptyPile { card });
+        }
+
+        card.effects_on_buy(self, player_index, callbacks);
+        card.effects_on_gain(self, player_index, callbacks);
+
+        self.gain(player_index, card.clone(), callbacks)?;
+
+        let player = &mut self.players[player_index];
+        player.resources.temp_coins -= card.cost().coins;
+
+        player.resources.buys -= 1;
+
+        // Hovel check
+        if card.is_victory() {
+            self.check_reactions(player_index, ReactionTrigger::BuyAVictoryCard, callbacks);
+        }
+
+        Ok(())
+    }
+
+    /// Action phase
+    pub fn action_phase(&mut self, player_index: usize, callbacks: &dyn Callbacks) {
+        let player = &mut self.players[player_index];
+
+        if player.resources.actions > 0 {
+            let mut indices = Vec::new();
+            while !indices.is_empty() {
+                indices = callbacks.choose_cards_from_hand(
+                    &ChoiceCountOptions::UpTo { max: 1 },
+                    "Choose an action card to play",
+                );
+
+                let card_index = indices[0];
+
+                if self
+                    .play_action_from_hand(player_index, card_index, callbacks)
+                    .is_err()
+                {
+                    continue;
+                }
+
+                if self.players[player_index].resources.actions == 0 {
+                    break;
+                }
+            }
+        }
+
+        // Do any end of action phase stuff here
+    }
+
+    /// Buy phase
+    pub fn buy_phase(&mut self, player_index: usize, callbacks: &dyn Callbacks) {
+        // TODO: allow player to choose which treasures they play?
+        self.play_all_treasures(player_index, callbacks);
+
+        let player = &mut self.players[player_index];
+        let player_number = player.player_number;
+
+        player.resources.coins_remaining = player.resources.coins + player.resources.temp_coins;
+
+        if player.resources.buys > 0 {
+            while let Some(card) = callbacks.choose_card_from_supply(player_number, &self.supply) {
+                // If player chooses a card they cannot buy, loop
+                if self
+                    .buy_card(player_index, card.clone(), callbacks)
+                    .is_err()
+                {
+                    continue;
+                }
+
+                if self.players[player_index].resources.buys == 0 {
+                    break;
+                }
+            }
+        }
+
+        // Do any end of buy phase stuff here
     }
 }

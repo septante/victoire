@@ -151,6 +151,7 @@ pub struct Resources {
     pub buys: usize,
     pub coins: usize,
     pub temp_coins: usize,
+    pub coins_remaining: usize,
 }
 
 /// What phase are we in
@@ -181,4 +182,6 @@ impl Phase {
 pub struct State {
     /// Is the player immune to attacks
     pub immune: bool,
+    pub temp_immune: bool,
+    pub merchant_bonus: usize,
 }

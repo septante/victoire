@@ -275,6 +275,7 @@ impl Card for Merchant {
         p.draw_cards(1);
 
         //TODO: add method on game
+        p.state.merchant_bonus += 1;
     }
 }
 
