@@ -19,12 +19,20 @@ impl Card for Artisan {
     card_cost!(6);
     types!(vec![Action]);
     fn effects_on_play(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {
-        // TODO: change to card of choice from supply and put a card from hand back on deck
-        let card = Box::new(Silver);
+        let card = callbacks
+            .choose_card_from_supply(player_index, &game.supply)
+            .unwrap();
         let result = game.gain_to_hand(player_index, card, callbacks);
         if result.is_err() {
             // TODO: get new card
         }
+        let card_index = callbacks.choose_cards_from_hand(
+            &ChoiceCountOptions::Exact { count: 1 },
+            "Choose a card to place on top of your deck",
+        )[0];
+        let card = game.remove_from_hand(player_index, card_index);
+        let player = game.get_player_mut(player_index).unwrap();
+        player.deck.push_front(card);
     }
 }
 

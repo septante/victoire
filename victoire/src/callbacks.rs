@@ -32,7 +32,12 @@ pub trait Callbacks: Clone + Send + Sync {
     /// Prompt the given player with a yes/no question
     fn get_player_consent(&self, player_index: usize, prompt: &str) -> bool;
     /// Prompt player for one or more player indices
-    fn choose_players(&self, player_index: usize, count: usize, prompt: &str) -> Vec<usize>;
+    fn choose_players(
+        &self,
+        player_index: usize,
+        count: &ChoiceCountOptions,
+        prompt: &str,
+    ) -> Vec<usize>;
 }
 
 /// How many items the player can choose
@@ -166,7 +171,12 @@ impl Callbacks for TestClient {
         input.to_lowercase().starts_with('y')
     }
 
-    fn choose_players(&self, player_index: usize, count: usize, prompt: &str) -> Vec<usize> {
+    fn choose_players(
+        &self,
+        player_index: usize,
+        count: &ChoiceCountOptions,
+        prompt: &str,
+    ) -> Vec<usize> {
         todo!()
     }
 }

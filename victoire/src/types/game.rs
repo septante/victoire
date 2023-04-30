@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use victoire_macros::card_vec;
 
 use crate::{
-    callbacks::Callbacks,
+    callbacks::{Callbacks, ChoiceCountOptions},
     cards::{base::*, dominion::*},
     error::{Error::*, Result},
     types::{
@@ -159,10 +159,15 @@ impl Game {
         Ok(())
     }
 
+    pub fn remove_from_hand(&mut self, player_index: usize, card_index: usize) -> Box<dyn Card> {
+        let player = self.get_player_mut(player_index).unwrap();
+        player.hand.remove(card_index).unwrap()
+    }
+
     pub fn reveal(&mut self, player_index: usize, count: usize) -> CardList {
         let mut cards = CardList::new();
         for _ in 0..count {
-            cards.push(self.players[player_index].deck.pop_front().unwrap())
+            cards.push(self.players[player_index].deck.pop_front().unwrap());
         }
 
         cards
@@ -200,7 +205,7 @@ impl Game {
                 let player = &self.players[player_index];
 
                 if !(player.state.immune) {
-                    card.attack_effects(self, index, callbacks)
+                    card.attack_effects(self, index, callbacks);
                 }
 
                 let mut player = &mut self.players[player_index];
@@ -231,7 +236,11 @@ impl Game {
                 vec![player_index + 1]
             }
 
-            _ => panic!(),
+            AttackTarget::PlayerOfChoice => callbacks.choose_players(
+                player_index,
+                &ChoiceCountOptions::Exact { count: 1 },
+                "Choose a player to target",
+            ),
         }
     }
 
