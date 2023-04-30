@@ -124,7 +124,7 @@ impl Player {
             if self.discard.is_empty() {
                 return;
             }
-            self.hand.push_back(self.discard.remove(i).unwrap())
+            self.hand.push_back(self.discard.remove(i).unwrap());
         }
     }
 

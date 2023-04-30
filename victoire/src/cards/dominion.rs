@@ -2,6 +2,8 @@
 // TODO: provide brief documentation on all effects for each card just for convenience
 // TODO: Add description fn for cards that have it
 
+use crate::callbacks::ChoiceCountOptions;
+
 use super::base::*;
 use super::prelude::*;
 
@@ -85,8 +87,12 @@ impl Card for Cellar {
     types!(vec![Action]);
     fn effects_on_play(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {
         let player = &mut game.players[player_index];
-        let indexes: Vec<usize> =
-            callbacks.choose_cards_from_hand(player.hand.len(), "Choose cards to discard");
+        let indexes: Vec<usize> = callbacks.choose_cards_from_hand(
+            &ChoiceCountOptions::UpTo {
+                max: player.hand.len(),
+            },
+            "Choose cards to discard",
+        );
         let count = indexes.len();
 
         player.discard_given_indexes(indexes);
@@ -106,8 +112,10 @@ impl Card for Chapel {
 
     fn effects_on_play(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {
         let player = &mut game.players[player_index];
-        let indexes: Vec<usize> =
-            callbacks.choose_cards_from_hand(4, "Choose up to 4 cards to trash");
+        let indexes: Vec<usize> = callbacks.choose_cards_from_hand(
+            &ChoiceCountOptions::UpTo { max: 4 },
+            "Choose up to 4 cards to trash",
+        );
         player.trash_given_indexes(indexes, &mut game.trash);
     }
 }
@@ -182,12 +190,12 @@ impl Card for Harbinger {
         player.add_actions(1);
         player.draw_cards(1);
 
-        if let Some(indexes) = callbacks.choose_cards_from_discard_opt(
-            1,
+        let indexes = callbacks.choose_cards_from_discard(
+            &ChoiceCountOptions::Exact { count: 1 },
             "Choose a card from your discard to put onto your deck.",
-        ) {
-            player.move_given_indexes_discard_to_hand(indexes);
-        }
+        );
+
+        player.move_given_indexes_discard_to_hand(indexes);
     }
 }
 
@@ -346,25 +354,19 @@ impl Card for ThroneRoom {
     types!(vec![Action]);
 
     fn effects_on_play(&self, game: &mut Game, player_index: usize, callbacks: &dyn Callbacks) {
-        let opt = callbacks.choose_cards_from_hand_opt(1, "Choose card to play twice");
-
-        if opt.is_none() {
-            return;
-        }
-
-        let card_index = opt.unwrap()[0];
+        let card_index = callbacks.choose_cards_from_hand(
+            &ChoiceCountOptions::UpTo { max: 1 },
+            "Choose card to play twice",
+        )[0];
 
         let player = &mut game.players[player_index];
         let mut card = player.hand.remove(card_index).unwrap();
 
         while !card.is_action() {
-            let opt = callbacks.choose_cards_from_hand_opt(1, "Choose card to play twice");
-
-            if opt.is_none() {
-                return;
-            }
-
-            let card_index = opt.unwrap()[0];
+            let card_index = callbacks.choose_cards_from_hand(
+                &ChoiceCountOptions::UpTo { max: 1 },
+                "Choose card to play twice",
+            )[0];
 
             card = player.hand.remove(card_index).unwrap();
         }

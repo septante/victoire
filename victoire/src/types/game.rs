@@ -8,7 +8,7 @@ use crate::{
     error::{Error::*, Result},
     types::{
         card::{AttackTarget, ReactionTrigger},
-        Card, CardDeck, CardList, CardType, Player, PlayerList, Supply,
+        Card, CardDeck, CardList, Player, PlayerList, Supply,
     },
 };
 
@@ -168,34 +168,6 @@ impl Game {
         cards
     }
 
-    /// Plays an action [card](Card) from the hand of the player corresponding
-    /// to the given index
-    ///
-    /// This is the function to call when a player plays a card directly
-    pub fn play_action_from_hand(
-        &mut self,
-        player_index: usize,
-        card_index: usize,
-        callbacks: &dyn Callbacks,
-    ) -> DominionResult<()> {
-        // Remove card from hand
-        let player = &mut self.players[player_index];
-        let card = player.hand.get(card_index).unwrap();
-        if card.is_action() {
-            let card = player.hand.remove(card_index).unwrap();
-            player.in_play.push_back(card.clone());
-
-            player.resources.actions -= 1;
-            self.action_effects(player_index, &*card, callbacks);
-
-            Ok(())
-        } else {
-            Err(CardTypeMisMatch {
-                expected: CardType::Action,
-            })
-        }
-    }
-
     /// Gives the player the effects of an action card as if they had played it
     ///
     /// Does not subtract actions from the player's total. Should only be called
@@ -259,9 +231,7 @@ impl Game {
                 vec![player_index + 1]
             }
 
-            AttackTarget::PlayerOfChoice => {
-                callbacks.choose_players(player_index, 1, "Choose a player to target")
-            }
+            _ => panic!(),
         }
     }
 

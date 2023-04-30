@@ -366,8 +366,7 @@ macro_rules! basic_victory {
 ///
 /// Format: `basic_curse!(StructName, card_name, cost, points);`
 ///
-/// For example, the basic Curse card could be declared as follows (the struct
-/// name is BasicCurse because the name Curse is already used for the card type):
+/// For example, the basic Curse card could be declared as follows:
 /// ```
 /// # use victoire::cards::prelude::*;
 /// basic_curse!(BasicCurse, "Curse", cost=0, points=-1);
