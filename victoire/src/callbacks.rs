@@ -96,6 +96,7 @@ impl Callbacks for TestClient {
                 let mut i = input.parse::<isize>().unwrap();
                 let mut j = 0;
                 while i >= 0 && j < *count {
+                    #[allow(clippy::cast_sign_loss)] // i must be >= 0 here
                     output.push(i as usize);
                     println!("{prompt}");
                     io::stdin()
@@ -109,6 +110,7 @@ impl Callbacks for TestClient {
                 let mut i = input.parse::<isize>().unwrap();
                 let mut j = 0;
                 while i >= 0 && j < *max {
+                    #[allow(clippy::cast_sign_loss)] // i must be >= 0 here
                     output.push(i as usize);
                     println!("{prompt}");
                     io::stdin()
@@ -122,6 +124,7 @@ impl Callbacks for TestClient {
                 let mut i = input.parse::<isize>().unwrap();
                 let mut j = 0;
                 while i >= 0 {
+                    #[allow(clippy::cast_sign_loss)] // i must be >= 0 here
                     output.push(i as usize);
                     println!("{prompt}");
                     io::stdin()

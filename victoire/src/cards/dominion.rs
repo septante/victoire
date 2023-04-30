@@ -2,6 +2,8 @@
 // TODO: provide brief documentation on all effects for each card just for convenience
 // TODO: Add description fn for cards that have it
 
+#![allow(clippy::wildcard_imports)]
+
 use crate::callbacks::ChoiceCountOptions;
 
 use super::base::*;
