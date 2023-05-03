@@ -12,6 +12,10 @@ use crate::{
     },
 };
 
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PartialGame {}
+
 /// The data for a game of Dominion.
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -99,6 +103,11 @@ impl Game {
             trash,
             extras,
         }
+    }
+
+    /// Generate a [`PartialGame`]
+    pub fn partial_game(&self, player_number: usize) -> PartialGame {
+        PartialGame {}
     }
 
     /// Returns the number of players in the game

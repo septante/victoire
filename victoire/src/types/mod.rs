@@ -4,8 +4,8 @@ pub mod player;
 
 pub use self::{
     card::{Card, CardType},
-    game::Game,
-    player::{Player, Phase},
+    game::{Game, PartialGame},
+    player::{Phase, Player},
 };
 use std::collections::{HashMap, VecDeque};
 
