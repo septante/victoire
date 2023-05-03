@@ -12,6 +12,7 @@ use crate::{
     },
 };
 
+#[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PartialGame {}
 
