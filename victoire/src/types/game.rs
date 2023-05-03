@@ -12,7 +12,6 @@ use crate::{
     },
 };
 
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PartialGame {}
 
@@ -36,7 +35,7 @@ impl Default for Game {
             game.add_player(player);
         }
 
-        game.create_supply(Game::default_supply_list()).unwrap();
+        game.generate_supply(Game::default_supply_list()).unwrap();
 
         game
     }
@@ -48,7 +47,7 @@ impl Game {
     }
 
     /// Generates the supply piles for a game given a list of cards to use
-    pub fn create_supply(&mut self, cards: CardList) -> Result {
+    pub fn generate_supply(&mut self, cards: CardList) -> Result {
         let player_count = self.player_count();
 
         let (victory_card_count, province_count, curse_count) = match player_count {
