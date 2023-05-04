@@ -4,12 +4,10 @@ use std::io;
 
 use crate::types::{Card, CardList, Supply};
 
-use dyn_clonable::clonable;
 use itertools::Itertools;
 
-#[clonable]
-/// Trait for getting input from players while card effects are occuring
-pub trait Callbacks: Clone + Send + Sync {
+/// Trait for getting input from players while card effects are occurring
+pub trait Callbacks: Send + Sync {
     /// Prompt the given player for a card from the supply
     fn choose_card_from_supply(
         &self,
