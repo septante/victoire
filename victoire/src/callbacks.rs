@@ -79,7 +79,7 @@ impl Callbacks for TestClient {
         io::stdin()
             .read_line(&mut input)
             .expect("error: unable to read user input");
-        let i = input.parse::<usize>().unwrap();
+        let i = input.trim_end().parse::<usize>().unwrap();
         let card = alphabetized.get(i).expect("Index out of bounds");
 
         Some(card.clone())
@@ -94,9 +94,10 @@ impl Callbacks for TestClient {
             .read_line(&mut input)
             .expect("error: unable to read user input");
 
+        let mut i = input.trim_end().parse::<isize>().unwrap();
+
         match count {
             ChoiceCountOptions::Exact { count } => {
-                let mut i = input.parse::<isize>().unwrap();
                 let mut j = 0;
                 while i >= 0 && j < *count {
                     #[allow(clippy::cast_sign_loss)] // i must be >= 0 here
@@ -105,12 +106,12 @@ impl Callbacks for TestClient {
                     io::stdin()
                         .read_line(&mut input)
                         .expect("error: unable to read user input");
+                    input = input.trim_end().to_owned();
                     i = input.parse::<isize>().unwrap();
                     j += 1;
                 }
             }
             ChoiceCountOptions::UpTo { max } => {
-                let mut i = input.parse::<isize>().unwrap();
                 let mut j = 0;
                 while i >= 0 && j < *max {
                     #[allow(clippy::cast_sign_loss)] // i must be >= 0 here
@@ -119,12 +120,12 @@ impl Callbacks for TestClient {
                     io::stdin()
                         .read_line(&mut input)
                         .expect("error: unable to read user input");
+                    input = input.trim_end().to_owned();
                     i = input.parse::<isize>().unwrap();
                     j += 1;
                 }
             }
             ChoiceCountOptions::Any => {
-                let mut i = input.parse::<isize>().unwrap();
                 let mut j = 0;
                 while i >= 0 {
                     #[allow(clippy::cast_sign_loss)] // i must be >= 0 here
@@ -133,6 +134,7 @@ impl Callbacks for TestClient {
                     io::stdin()
                         .read_line(&mut input)
                         .expect("error: unable to read user input");
+                    input = input.trim_end().to_owned();
                     i = input.parse::<isize>().unwrap();
                     j += 1;
                 }
